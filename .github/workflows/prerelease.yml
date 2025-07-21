@@ -127,7 +127,7 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Installing npm dependencies..."
-          npm ci --prefer-offline --no-audit
+          npm i
         env:
           ELECTRON_CACHE: ~/.cache/electron
           ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
