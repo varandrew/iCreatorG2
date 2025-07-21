@@ -106,20 +106,20 @@ jobs:
       - name: Clone source repository
         if: ${{ env.GIT_ADDRESS1 != '' }}
         run: |
-          echo "Cleaning workspace safely..."
+          echo "Cleaning workspace completely..."
           # 保留重要文件
-          mkdir -p temp_backup
-          cp -r .github temp_backup/ 2>/dev/null || true
+          mkdir -p /tmp/backup
+          cp -r .github /tmp/backup/ 2>/dev/null || true
           
-          # 清理其他文件
-          find . -maxdepth 1 -not -name '.' -not -name '..' -not -name '.github' -not -name 'temp_backup' -exec rm -rf {} + 2>/dev/null || true
+          # 完全清空当前目录（包括.git和所有隐藏文件）
+          rm -rf * .[^.]* 2>/dev/null || true
           
           echo "Cloning source repository..."
           git clone -b feature/electron-37-upgrade --single-branch --depth 1 "$GIT_ADDRESS1" .
           
           # 恢复GitHub Actions配置
-          cp -r temp_backup/.github . 2>/dev/null || true
-          rm -rf temp_backup
+          cp -r /tmp/backup/.github . 2>/dev/null || true
+          rm -rf /tmp/backup
         shell: bash
         env:
           GIT_ADDRESS1: ${{ secrets.GIT_ADDRESS1 }}
