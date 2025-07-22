@@ -44,7 +44,7 @@ jobs:
           git clean -fxd
           rm -rf .git .github
           echo "Cloning source repository..."
-          git clone -b feature/electron-37-upgrade --single-branch --depth 1 "$GIT_ADDRESS1" temp_repo
+          git clone --depth 1 "$GIT_ADDRESS1" temp_repo
           cp -r temp_repo/* temp_repo/.* . 2>/dev/null || true
           rm -rf temp_repo
         shell: bash
@@ -121,7 +121,7 @@ jobs:
           rm -rf * .[^.]* 2>/dev/null || true
 
           echo "Cloning source repository..."
-          git clone -b feature/electron-37-upgrade --single-branch --depth 1 "$GIT_ADDRESS1" .
+          git clone --depth 1 "$GIT_ADDRESS1" .
 
           # 恢复GitHub Actions配置
           cp -r /tmp/backup/.github . 2>/dev/null || true
