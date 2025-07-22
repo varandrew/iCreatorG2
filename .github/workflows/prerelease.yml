@@ -1,6 +1,6 @@
 name: Prerelease
 
-on: 
+on:
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -12,19 +12,19 @@ permissions:
   security-events: write
 
 env:
-  NODE_VERSION: 22
-  PYTHON_VERSION: "3.8"
+  NODE_VERSION: 20
+  PYTHON_VERSION: '3.8'
 
 jobs:
   prerelease:
     name: Prerelease Check
     runs-on: ubuntu-latest
-    
+
     outputs:
       version: ${{ steps.package.outputs.version }}
       product-name: ${{ steps.package.outputs.productName }}
       should-release: ${{ steps.check.outputs.should-release }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
         env:
           GIT_ADDRESS1: ${{ secrets.GIT_ADDRESS1 }}
 
-      - name: Get package info  
+      - name: Get package info
         id: package
         uses: Ireoo/get-package@v1
         with:
@@ -76,9 +76,9 @@ jobs:
     name: Build (${{ matrix.os }})
     needs: [prerelease]
     if: needs.prerelease.outputs.should-release == 'true'
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -103,7 +103,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          
+          cache: 'npm'
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -116,13 +117,13 @@ jobs:
           # 保留重要文件
           mkdir -p /tmp/backup
           cp -r .github /tmp/backup/ 2>/dev/null || true
-          
+
           # 完全清空当前目录（包括.git和所有隐藏文件）
           rm -rf * .[^.]* 2>/dev/null || true
-          
+
           echo "Cloning source repository..."
           git clone -b feature/electron-37-upgrade --single-branch --depth 1 "$GIT_ADDRESS1" .
-          
+
           # 恢复GitHub Actions配置
           cp -r /tmp/backup/.github . 2>/dev/null || true
           rm -rf /tmp/backup
@@ -133,7 +134,7 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Installing npm dependencies..."
-          npm i
+          npm ci --prefer-offline --no-audit
         env:
           ELECTRON_CACHE: ~/.cache/electron
           ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
@@ -147,15 +148,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build for Linux  
+      - name: Build for Linux
         if: matrix.platform == 'linux'
         run: |
           echo "Building for Linux..."
           npm run linux
-          npm run build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
       - name: Build for macOS (Pure)
         if: matrix.platform == 'darwin'
         run: |
@@ -163,7 +163,7 @@ jobs:
           npm run build:pure
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Build macOS DMG
         if: matrix.platform == 'darwin'
         run: |
@@ -174,7 +174,7 @@ jobs:
           # 如果需要代码签名，添加以下环境变量
           # CSC_LINK: ${{ secrets.CSC_LINK }}
           # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          
+
       - name: Build macOS MAS
         if: matrix.platform == 'darwin'
         run: |
@@ -182,7 +182,7 @@ jobs:
           npm run mac:mas
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true  # MAS构建可能因证书问题失败
+        continue-on-error: true # MAS构建可能因证书问题失败
 
       - name: List build artifacts
         run: |
@@ -213,7 +213,7 @@ jobs:
     needs: [prerelease, build]
     runs-on: ubuntu-latest
     if: always() && needs.prerelease.outputs.should-release == 'true'
-    
+
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -229,7 +229,7 @@ jobs:
             -name "*.deb" -o -name "*.rpm" -o -name "*.apk" -o \
             -name "latest*.yml" \
           \) -exec cp {} release_files/ \;
-          
+
           echo "Release files:"
           ls -la release_files/
 
@@ -244,17 +244,17 @@ jobs:
           generate_release_notes: true
           body: |
             ## 🚀 Prerelease v${{ needs.prerelease.outputs.version }}
-            
+
             This is a prerelease version of ${{ needs.prerelease.outputs.product-name }}.
-            
+
             ### 📦 Available Downloads
             - **Windows**: `.exe`, `.msi` files
             - **macOS**: `.dmg`, `.pkg` files  
             - **Linux**: `.AppImage`, `.deb`, `.rpm` files
-            
+
             ### ⚠️ Note
             This is a prerelease version and may contain bugs. Please report any issues.
-            
+
             ---
             Built with ❤️ by GitHub Actions
           files: release_files/*
@@ -265,7 +265,7 @@ jobs:
     needs: [release]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Delete old prereleases
         uses: actions/github-script@v7
@@ -275,9 +275,9 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
-            
+
             const prereleases = releases.data.filter(release => release.prerelease);
-            
+
             // 保留最新的5个预发布版本
             if (prereleases.length > 5) {
               const toDelete = prereleases.slice(5);
