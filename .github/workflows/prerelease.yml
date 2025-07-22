@@ -5,6 +5,12 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+# 添加必要的权限配置
+permissions:
+  contents: write
+  actions: read
+  security-events: write
+
 env:
   NODE_VERSION: 22
   PYTHON_VERSION: "3.8"
@@ -228,7 +234,7 @@ jobs:
           ls -la release_files/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prerelease.outputs.version }}
           name: ${{ needs.prerelease.outputs.product-name }} v${{ needs.prerelease.outputs.version }}
@@ -252,8 +258,7 @@ jobs:
             ---
             Built with ❤️ by GitHub Actions
           files: release_files/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   cleanup:
     name: Cleanup
